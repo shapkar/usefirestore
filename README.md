@@ -1,6 +1,6 @@
 # usefirestore
 
-> This package helps you to easy combine React, Redux and Firestore using hook.
+> This package helps you to easy combine React, Redux and Firestore using hook. Read more at medium.com/exelerate
 
 [![NPM](https://img.shields.io/npm/v/usefirestore.svg)](https://www.npmjs.com/package/usefirestore) [![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
 

@@ -1,4 +1,4 @@
-import { useEffect, useRef, createContext } from "react";
+import { useEffect, useRef, createContext, useContext } from "react";
 import collectionApi from "./collectionApi";
 import docApi from "./docApi";
 import { leftJoinApi } from "./leftJoinApi";
@@ -23,7 +23,6 @@ import {
   WithFieldValue,
 } from "@firebase/firestore";
 import { buildQuery } from "./buildQuery";
-import { useContext } from "hoist-non-react-statics/node_modules/@types/react";
 
 export const FirestoreContext = createContext<{
   db: Firestore | null;

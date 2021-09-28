@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import collectionApi from "./collectionApi";
 import docApi from "./docApi";
+import { leftJoinApi } from "./leftJoinApi";
 import { CollectionOptions, DocumentOptions } from "./types";
 import { useDispatch } from "react-redux";
 import {
@@ -19,6 +20,8 @@ import {
   updateDoc,
   setDoc,
   deleteDoc,
+  UpdateData,
+  WithFieldValue,
 } from "@firebase/firestore";
 import { buildQuery } from "./buildQuery";
 
@@ -29,7 +32,7 @@ export interface ListenerState {
 
 export type GenericActions<T> = {
   loading?: ActionCreatorWithoutPayload<string>;
-  success: ActionCreatorWithOptionalPayload<T, string>;
+  success: ActionCreatorWithOptionalPayload<T | T[], string>;
   error?: ActionCreatorWithOptionalPayload<any, string>;
 };
 
@@ -103,12 +106,33 @@ export const useFirestore = <T extends DocumentData>(
     docApi<T>(db, path, id, actions, dispatch, docListenersRef, options);
   };
 
+  const leftJoin = async <T,>(
+    pathOne: string,
+    pathTwo: string,
+    joinKey: string,
+    field: string,
+    actions: GenericActions<T>,
+    options?: CollectionOptions
+  ) => {
+    leftJoinApi<T>(
+      db,
+      pathOne,
+      pathTwo,
+      joinKey,
+      field,
+      actions,
+      dispatch,
+      collectionListenersRef,
+      options
+    );
+  };
+
   const id = () => {
     const ref = c(db, path);
     return ref.id;
   };
 
-  const add = async (data: any) => {
+  const add = async (data: T) => {
     const ref = c(db, path);
 
     return addDoc(ref, data)
@@ -119,7 +143,7 @@ export const useFirestore = <T extends DocumentData>(
       .catch((e) => console.log("Error creating document", e));
   };
 
-  const update = async (id: string, data: any) => {
+  const update = async (id: string, data: UpdateData<Partial<T>>) => {
     const docRef = d(db, path, id);
     return updateDoc(docRef, data)
       .then(() => console.log("Document updated."))
@@ -129,7 +153,7 @@ export const useFirestore = <T extends DocumentData>(
       });
   };
 
-  const set = async (id: string, data: any) => {
+  const set = async (id: string, data: WithFieldValue<Partial<T>>) => {
     const docRef = d(db, path, id);
     return setDoc(docRef, data)
       .then(() => console.log("Document updated."))
@@ -164,5 +188,15 @@ export const useFirestore = <T extends DocumentData>(
     docListenersRef.current.forEach((listener) => listener.unsubscribe());
   };
 
-  return { collection, doc, id, add, update, set, remove, unsubscribe };
+  return {
+    collection,
+    doc,
+    leftJoin,
+    id,
+    add,
+    update,
+    set,
+    remove,
+    unsubscribe,
+  };
 };

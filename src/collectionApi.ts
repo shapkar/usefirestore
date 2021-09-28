@@ -25,13 +25,13 @@ const collectionApi = <T>(
       (querySnapshot) => {
         const data: DocumentData[] = [];
         if (querySnapshot.empty) {
-          dispatch(actions?.success([] as unknown as T));
+          dispatch(actions?.success([]));
           return;
         }
         querySnapshot.forEach((doc) =>
           data.push({ id: doc.id, ...doc.data() })
         );
-        dispatch(actions?.success(data as unknown as T));
+        dispatch(actions?.success(data as unknown as T[]));
         if (options.lazyLoad) {
           lastDocRef!.current =
             querySnapshot.docs[querySnapshot.docs.length - 1];
@@ -53,7 +53,7 @@ const collectionApi = <T>(
         querySnapshot.forEach((doc) =>
           data.push({ id: doc.id, ...doc.data() } as unknown as T)
         );
-        dispatch(actions?.success(data as unknown as T));
+        dispatch(actions?.success(data as unknown as T[]));
         if (options && options.lazyLoad) {
           lastDocRef!.current =
             querySnapshot.docs[querySnapshot.docs.length - 1];

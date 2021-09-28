@@ -37,5 +37,5 @@ type SortOptions = {
 type QueryOptions = {
   attribute: string | FieldPath;
   operator: WhereFilterOp;
-  value: string | number | boolean | any[];
+  value: string | number | boolean | any[] | Date;
 };

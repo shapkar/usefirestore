@@ -1,22 +1,3 @@
-# usefirestore
-
-> This package helps you to easy combine React, Redux and Firestore using hook.
-
-[![NPM](https://img.shields.io/npm/v/usefirestore.svg)](https://www.npmjs.com/package/usefirestore) [![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
-
-## Install
-
-```bash
-npm install --save usefirestore
-```
-
-```bash
-yarn add usefirestore
-```
-
-## Usage
-
-```tsx
 import { useEffect } from "react";
 import { useSelector } from "react-redux";
 import { GenericActions, useFirestore } from "usefirestore";
@@ -58,12 +39,3 @@ const App = () => {
   );
 };
 export default App;
-```
-
-## License
-
-MIT © [shapkar](https://github.com/shapkar)
-
----
-
-This hook is created using [create-react-hook](https://github.com/hermanya/create-react-hook).

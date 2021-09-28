@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import { useSelector } from "react-redux";
 import { GenericActions, useFirestore } from "usefirestore";
 import { CollectionOptions } from "../../dist/types";
-import { db } from "./config";
 import { slice, selector } from "./redux/slices/notification";
 import { Notification } from "./redux/slices/notification";
 
@@ -18,7 +17,7 @@ const firestoreCollectionOptions: CollectionOptions = {
 };
 
 const App = () => {
-  const ref = useFirestore<Notification>(db, "notifications");
+  const ref = useFirestore<Notification>("notifications");
   const notifications = useSelector(selector.selectAll);
 
   useEffect(() => {

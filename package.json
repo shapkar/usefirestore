@@ -1,6 +1,6 @@
 {
   "name": "usefirestore",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "This package helps you to easy combine React, Redux and Firestore using hooks.",
   "author": "shapkar",
   "license": "MIT",

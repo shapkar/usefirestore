@@ -1,9 +1,8 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, createContext } from "react";
 import collectionApi from "./collectionApi";
 import docApi from "./docApi";
 import { leftJoinApi } from "./leftJoinApi";
 import { CollectionOptions, DocumentOptions } from "./types";
-import { useDispatch } from "react-redux";
 import {
   ActionCreatorWithOptionalPayload,
   ActionCreatorWithoutPayload,
@@ -24,6 +23,13 @@ import {
   WithFieldValue,
 } from "@firebase/firestore";
 import { buildQuery } from "./buildQuery";
+import { useContext } from "hoist-non-react-statics/node_modules/@types/react";
+
+export const FirestoreContext = createContext<{
+  db: Firestore | null;
+  dispatch: Function;
+}>({ db: null, dispatch: () => {} });
+export const FirestoreProvider = FirestoreContext.Provider;
 
 export interface ListenerState {
   name?: string;
@@ -36,10 +42,9 @@ export type GenericActions<T> = {
   error?: ActionCreatorWithOptionalPayload<any, string>;
 };
 
-export const useFirestore = <T extends DocumentData>(
-  db: Firestore,
-  path: string
-) => {
+export const useFirestore = <T extends DocumentData>(path: string) => {
+  const db = useContext(FirestoreContext).db!;
+
   const collectionListenersRef = useRef<ListenerState[]>([]);
   const docListenersRef = useRef<ListenerState[]>([]);
   const lastDocRef = useRef<QueryDocumentSnapshot<DocumentData>>(null);
@@ -55,7 +60,7 @@ export const useFirestore = <T extends DocumentData>(
     };
   }, [collectionListenersRef]);
 
-  const dispatch = useDispatch();
+  const dispatch = useContext(FirestoreContext).dispatch;
 
   const collection = (
     actions: GenericActions<T>,

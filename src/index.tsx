@@ -1,23 +1,168 @@
-import * as React from 'react';
+import { useEffect, useRef } from "react";
+import collectionApi from "./collectionApi";
+import docApi from "./docApi";
+import { CollectionOptions, DocumentOptions } from "./types";
+import { useDispatch } from "react-redux";
+import {
+  ActionCreatorWithOptionalPayload,
+  ActionCreatorWithoutPayload,
+} from "@reduxjs/toolkit";
+import {
+  DocumentData,
+  QueryDocumentSnapshot,
+  Firestore,
+  startAfter,
+  query,
+  collection as c,
+  doc as d,
+  addDoc,
+  updateDoc,
+  setDoc,
+  deleteDoc,
+} from "@firebase/firestore";
+import { buildQuery } from "./buildQuery";
 
-export const useMyHook = () => {
-  let [{
-    counter
-  }, setState] = React.useState<{
-    counter: number;
-  }>({
-    counter: 0
-  });
+export interface ListenerState {
+  name?: string;
+  unsubscribe: () => void;
+}
 
-  React.useEffect(() => {
-    let interval = window.setInterval(() => {
-      counter++;
-      setState({counter})
-    }, 1000)
+export type GenericActions<T> = {
+  loading?: ActionCreatorWithoutPayload<string>;
+  success: ActionCreatorWithOptionalPayload<T, string>;
+  error?: ActionCreatorWithOptionalPayload<any, string>;
+};
+
+export const useFirestore = <T extends DocumentData>(
+  db: Firestore,
+  path: string
+) => {
+  const collectionListenersRef = useRef<ListenerState[]>([]);
+  const docListenersRef = useRef<ListenerState[]>([]);
+  const lastDocRef = useRef<QueryDocumentSnapshot<DocumentData>>(null);
+
+  useEffect(() => {
     return () => {
-      window.clearInterval(interval);
+      collectionListenersRef.current?.forEach((listener) => {
+        listener.unsubscribe();
+      });
+      docListenersRef.current.forEach((listener) => {
+        listener.unsubscribe();
+      });
     };
-  }, []);
+  }, [collectionListenersRef]);
 
-  return counter;
+  const dispatch = useDispatch();
+
+  const collection = (
+    actions: GenericActions<T>,
+    options?: CollectionOptions
+  ): void | {} => {
+    let collectionQuery = buildQuery(db, path, options);
+
+    collectionApi<T>(
+      collectionQuery,
+      actions,
+      dispatch,
+      collectionListenersRef,
+      lastDocRef,
+      options
+    );
+
+    if (options?.lazyLoad) {
+      return {
+        loadMore: (limit?: number) => {
+          if (limit) {
+            collectionQuery = buildQuery(db, path, { ...options, limit });
+          }
+
+          collectionQuery = query(
+            collectionQuery,
+            startAfter(lastDocRef.current)
+          );
+
+          collectionApi<T>(
+            collectionQuery,
+            actions,
+            dispatch,
+            collectionListenersRef,
+            lastDocRef,
+            options
+          );
+        },
+      };
+    }
+  };
+
+  const doc = async (
+    id: string,
+    actions: GenericActions<T>,
+    options?: DocumentOptions
+  ) => {
+    console.log("path: ", path);
+    docApi<T>(db, path, id, actions, dispatch, docListenersRef, options);
+  };
+
+  const id = () => {
+    const ref = c(db, path);
+    return ref.id;
+  };
+
+  const add = async (data: any) => {
+    const ref = c(db, path);
+
+    return addDoc(ref, data)
+      .then((res) => {
+        console.log("Document created with id: ", res.id);
+        return res.id;
+      })
+      .catch((e) => console.log("Error creating document", e));
+  };
+
+  const update = async (id: string, data: any) => {
+    const docRef = d(db, path, id);
+    return updateDoc(docRef, data)
+      .then(() => console.log("Document updated."))
+      .catch((e) => {
+        console.log(`Error updating document with id: ${id}`, e);
+        return Promise.reject(e);
+      });
+  };
+
+  const set = async (id: string, data: any) => {
+    const docRef = d(db, path, id);
+    return setDoc(docRef, data)
+      .then(() => console.log("Document updated."))
+      .catch((e) => {
+        console.log(`Error updating document with id: ${id}`, e);
+        throw e;
+      });
+  };
+
+  const remove = async (id: string) => {
+    const docRef = d(db, path, id);
+    return deleteDoc(docRef)
+      .then(() => console.log("Document deleted."))
+      .catch((e) => {
+        throw e;
+      });
+  };
+
+  const unsubscribe = (listenerName?: string) => {
+    if (listenerName) {
+      collectionListenersRef.current
+        .find((listener) => listener.name === listenerName)
+        ?.unsubscribe();
+      docListenersRef.current
+        .find((listener) => listener.name === listenerName)
+        ?.unsubscribe();
+      return;
+    }
+    collectionListenersRef.current.forEach((listener) =>
+      listener.unsubscribe()
+    );
+    docListenersRef.current.forEach((listener) => listener.unsubscribe());
+  };
+
+  return { collection, doc, id, add, update, set, remove, unsubscribe };
 };
